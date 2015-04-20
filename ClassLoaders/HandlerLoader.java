@@ -1,4 +1,4 @@
-package HandlerLoader;
+package ClassLoaders;
 
 public class HandlerLoader extends ClassLoader{
 	private String scanFolder;
@@ -13,6 +13,5 @@ public class HandlerLoader extends ClassLoader{
 	
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		return null;
-        
     }
 }
