@@ -47,7 +47,7 @@ public class SystemConfigManager implements XMLDocument{
 	public void createXML(URI path, Object elementTree, String name) {
 		// TODO Auto-generated method stub
 		Path filePath = Paths.get(path);
-		filePath.resolve(name);
+		filePath = filePath.resolve(name);
 		SystemConfig tree = (SystemConfig)elementTree;
 		//Implements a queue
 		ArrayList<SystemConfig> subroots = new ArrayList<SystemConfig>();
@@ -64,7 +64,8 @@ public class SystemConfigManager implements XMLDocument{
 			Node rt = noderoots.remove(0);
 			for(SystemConfig child: sc.children){
 				Node toadd = this.document.createElement(child.name);
-				toadd.appendChild(child.hasChildren?this.document.createElement(child.name):this.document.createTextNode(child.value));
+				toadd.appendChild(child.hasChildren?this.document.createElement(child.name):
+					this.document.createTextNode(child.value));
 				rt.appendChild(toadd);
 				if(child.hasChildren){
 					subroots.add(child);

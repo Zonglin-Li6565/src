@@ -25,7 +25,7 @@ public class XMLTest {
 		Child_1.children.add(grad_ch_1);
 		Child_1.children.add(grad_ch_2);
 		grad_ch_1.children.add(gg_ch_1);
-		String path = "D:\\Test\\test.xml";
+		String path = "D:\\Test";
 		Path p = Paths.get(path);
 		SystemConfigManager XMLmanager = new SystemConfigManager();
 		XMLmanager.createXML(p.toUri(), root, "test.xml");
