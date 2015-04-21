@@ -67,8 +67,11 @@ public class SystemConfigManager implements XMLDocument{
 			Node rt = noderoots.remove(0);
 			for(SystemConfig child: sc.children){
 				Node toadd = this.document.createElement(child.name);
-				toadd.appendChild(child.hasChildren?this.document.createElement(child.name):
-					this.document.createTextNode(child.value));
+				//toadd.appendChild(child.hasChildren?this.document.createElement(child.name):
+					//this.document.createTextNode(child.value));
+				if(! child.hasChildren){
+					toadd.setTextContent(child.value);
+				}
 				rt.appendChild(toadd);
 				if(child.hasChildren){
 					subroots.add(child);
@@ -108,7 +111,7 @@ public class SystemConfigManager implements XMLDocument{
 			ArrayList<SystemConfig> subroots = new ArrayList<SystemConfig>();
 			ArrayList<Node> noderoots = new ArrayList<Node>();
 			//ONLY the first one node will be added to the queue
-			Node root = configs.item(0);
+			Node root = (Node) configs.item(0);
 			SystemConfig SCroot = new SystemConfig(root.getNodeName(), root.hasChildNodes());
 			//Add the two objects to the queue
 			subroots.add(SCroot);
@@ -118,10 +121,19 @@ public class SystemConfigManager implements XMLDocument{
 				SystemConfig sc = subroots.remove(0);					//get the first one
 				Node rt = noderoots.remove(0);							//same
 				for(int i = 0; i < rt.getChildNodes().getLength(); i++){
-					Node current = rt.getChildNodes().item(i);
+					Node current = (Node) rt.getChildNodes().item(i);
+					if(current.getNodeName().equals("#text")){
+						continue;
+					}
 					boolean hasChildren = current.hasChildNodes();
-					SystemConfig newNode = new SystemConfig(current.getNodeName(), hasChildren);
-					newNode.value = hasChildren?"":current.getNodeValue();
+					SystemConfig newNode = new SystemConfig(current.getNodeName(), true);
+					String testContent = current.getTextContent();
+					System.out.println(testContent);
+					System.out.println(hasChildren);
+					//if(!hasChildren){
+						newNode.value = testContent;
+					//}
+					newNode.value = hasChildren?"":testContent;
 					sc.children.add(newNode);
 					if(hasChildren){
 						subroots.add(newNode);
