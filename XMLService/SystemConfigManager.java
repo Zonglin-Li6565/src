@@ -3,6 +3,7 @@ package XMLService;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.file.Path;
@@ -24,6 +25,8 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import interfaces.XMLDocument;
 
@@ -87,9 +90,50 @@ public class SystemConfigManager implements XMLDocument{
 		} 
 	}
 
+	/**
+	 * Load the XML configuration.Assume the configuration tree has only one 
+	 * root node.
+	 * @param path
+	 * @return
+	 */
 	@Override
 	public Object parseXML(URI path) {
 		// TODO Auto-generated method stub
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		try {
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			Document document = db.parse(Paths.get(path).toFile());
+			NodeList configs = document.getChildNodes();
+			//Implement two queues
+			ArrayList<SystemConfig> subroots = new ArrayList<SystemConfig>();
+			ArrayList<Node> noderoots = new ArrayList<Node>();
+			//ONLY the first one node will be added to the queue
+			Node root = configs.item(0);
+			SystemConfig SCroot = new SystemConfig(root.getNodeName(), root.hasChildNodes());
+			//Add the two objects to the queue
+			subroots.add(SCroot);
+			noderoots.add(root);
+			//BFS
+			while(noderoots.size() > 0){
+				SystemConfig sc = subroots.remove(0);					//get the first one
+				Node rt = noderoots.remove(0);							//same
+				for(int i = 0; i < rt.getChildNodes().getLength(); i++){
+					Node current = rt.getChildNodes().item(i);
+					boolean hasChildren = current.hasChildNodes();
+					SystemConfig newNode = new SystemConfig(current.getNodeName(), hasChildren);
+					newNode.value = hasChildren?"":current.getNodeValue();
+					sc.children.add(newNode);
+					if(hasChildren){
+						subroots.add(newNode);
+						noderoots.add(current);
+					}
+				}
+			}
+			return SCroot;
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 
