@@ -41,6 +41,7 @@ public class classNametest{
         
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         ClassLoader tcl = Handler.class.getClassLoader();
+        System.out.println("object name for cl: "+cl.getClass().getTypeName());
         
         
         System.out.println(System.getProperty("java.class.path"));

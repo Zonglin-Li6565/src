@@ -1,6 +1,7 @@
 package XMLService;
 
-import java.io.File;
+import interfaces.XMLDocument;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,26 +10,24 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Queue;
+import java.util.Enumeration;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
-import interfaces.XMLDocument;
 
 public class SystemConfigManager implements XMLDocument{
 	
@@ -51,11 +50,11 @@ public class SystemConfigManager implements XMLDocument{
 		// TODO Auto-generated method stub
 		Path filePath = Paths.get(path);
 		filePath = filePath.resolve(name);
-		SystemConfig tree = (SystemConfig)elementTree;
+		Configuration tree = (Configuration)elementTree;
 		//Implements a queue
-		ArrayList<SystemConfig> subroots = new ArrayList<SystemConfig>();
+		ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 		subroots.add(tree);
-		Node root = this.document.createElement(tree.name);
+		Node root = this.document.createElement(tree.getName());
 		this.document.appendChild(root); 
 		//Implements a queue
 		ArrayList<Node> noderoots = new ArrayList<Node>();
@@ -63,20 +62,25 @@ public class SystemConfigManager implements XMLDocument{
 		//Traverse all nodes in the tree
 		//BFS
 		while(subroots.size() > 0){
-			SystemConfig sc = subroots.remove(0);
+			Configuration sc = subroots.remove(0);
 			Node rt = noderoots.remove(0);
-			for(SystemConfig child: sc.children){
-				Node toadd = this.document.createElement(child.name);
-				//toadd.appendChild(child.hasChildren?this.document.createElement(child.name):
-					//this.document.createTextNode(child.value));
-				if(! child.hasChildren){
-					toadd.setTextContent(child.value);
+			rt.setTextContent(sc.hasText()?sc.getText():"");
+			if(sc.hasAttributes()){
+				Enumeration<String> attributesNames = sc.getAllAttributesNames();
+				for(String attributeName = attributesNames.nextElement(); attributesNames.hasMoreElements(); 
+						attributeName = attributesNames.nextElement()){
+					Attr Attribute = this.document.createAttribute(attributeName);
+					Attribute.setValue(sc.getAttributeValue(attributeName));
 				}
+			}
+			Enumeration<Configuration> children = sc.getAllChildren();
+			Configuration child = null;
+			while(children.hasMoreElements()){
+				child = children.nextElement();
+				Node toadd = this.document.createElement(child.getName());
 				rt.appendChild(toadd);
-				if(child.hasChildren){
-					subroots.add(child);
-					noderoots.add(toadd);
-				}
+				subroots.add(child);
+				noderoots.add(toadd);
 			}
 		}
 		TransformerFactory tf = TransformerFactory.newInstance(); 
@@ -96,6 +100,7 @@ public class SystemConfigManager implements XMLDocument{
 	/**
 	 * Load the XML configuration.Assume the configuration tree has only one 
 	 * root node.
+	 * 
 	 * @param path
 	 * @return
 	 */
@@ -108,36 +113,48 @@ public class SystemConfigManager implements XMLDocument{
 			Document document = db.parse(Paths.get(path).toFile());
 			NodeList configs = document.getChildNodes();
 			//Implement two queues
-			ArrayList<SystemConfig> subroots = new ArrayList<SystemConfig>();
+			ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 			ArrayList<Node> noderoots = new ArrayList<Node>();
 			//ONLY the first one node will be added to the queue
 			Node root = (Node) configs.item(0);
-			SystemConfig SCroot = new SystemConfig(root.getNodeName(), root.hasChildNodes());
+			Configuration SCroot = new Configuration();
 			//Add the two objects to the queue
 			subroots.add(SCroot);
 			noderoots.add(root);
 			//BFS
 			while(noderoots.size() > 0){
-				SystemConfig sc = subroots.remove(0);					//get the first one
+				Configuration sc = subroots.remove(0);					//get the first one
 				Node rt = noderoots.remove(0);							//same
+				NamedNodeMap map = rt.getAttributes();
+				sc.setName(rt.getNodeName());
+				if(map != null){
+					for(int i = 0; i < map.getLength(); i++){
+						Attr attr = (Attr)map.item(i);
+						sc.addAttribute(attr.getName(), attr.getValue());
+					}
+				}
+				
 				for(int i = 0; i < rt.getChildNodes().getLength(); i++){
 					Node current = (Node) rt.getChildNodes().item(i);
-					if(current.getNodeName().equals("#text")){
-						continue;
-					}
-					boolean hasChildren = current.hasChildNodes();
-					SystemConfig newNode = new SystemConfig(current.getNodeName(), true);
-					String testContent = current.getTextContent();
-					System.out.println(testContent);
-					System.out.println(hasChildren);
-					//if(!hasChildren){
-						newNode.value = testContent;
-					//}
-					newNode.value = hasChildren?"":testContent;
-					sc.children.add(newNode);
-					if(hasChildren){
+					Configuration newNode = new Configuration();
+					short nodeType = current.getNodeType();
+					if(nodeType == Node.ELEMENT_NODE){
 						subroots.add(newNode);
 						noderoots.add(current);
+						//test whether the name already exists
+						if(sc.getChild(current.getNodeName()) == null){
+							sc.addChild(current.getNodeName(), newNode);
+						}else{
+							int j = 2;
+							while(sc.getChild(current.getNodeName() + "$" + j) != null){
+								j++;
+							}
+							sc.addChild(current.getNodeName() + "$" + j, newNode);
+						}
+						
+					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
+						sc.setHastext(true);
+						sc.setText(current.getNodeValue());
 					}
 				}
 			}
@@ -148,5 +165,4 @@ public class SystemConfigManager implements XMLDocument{
 		}
 		return null;
 	}
-
 }
