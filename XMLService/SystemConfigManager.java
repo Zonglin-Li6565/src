@@ -100,7 +100,8 @@ public class SystemConfigManager implements XMLDocument{
 	/**
 	 * Load the XML configuration.Assume the configuration tree has only one 
 	 * root node.
-	 * 
+	 * <hr>
+	 * Implementing notes:<br><br>
 	 * @param path
 	 * @return
 	 */
