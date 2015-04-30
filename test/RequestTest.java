@@ -1,6 +1,6 @@
 package test;
 
-import interfaces.Request;
+import NotBeUsedNow.Request;
 
 public class RequestTest implements Request {
 	

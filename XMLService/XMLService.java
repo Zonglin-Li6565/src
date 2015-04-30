@@ -24,16 +24,17 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class SystemConfigManager implements XMLDocument{
+public class XMLService implements XMLDocument{
 	
 	private Document document; 
 	
-	public SystemConfigManager(){
+	public XMLService(){
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -46,7 +47,7 @@ public class SystemConfigManager implements XMLDocument{
 	}
 	
 	@Override
-	public void createXML(URI path, Object elementTree, String name) {
+	public void createXML(URI path, Configuration elementTree, String name) {
 		// TODO Auto-generated method stub
 		Path filePath = Paths.get(path);
 		filePath = filePath.resolve(name);
@@ -54,30 +55,29 @@ public class SystemConfigManager implements XMLDocument{
 		//Implements a queue
 		ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 		subroots.add(tree);
-		Node root = this.document.createElement(tree.getName());
+		Element root = this.document.createElement(tree.getName());
 		this.document.appendChild(root); 
 		//Implements a queue
-		ArrayList<Node> noderoots = new ArrayList<Node>();
+		ArrayList<Element> noderoots = new ArrayList<Element>();
 		noderoots.add(root);
 		//Traverse all nodes in the tree
 		//BFS
 		while(subroots.size() > 0){
 			Configuration sc = subroots.remove(0);
-			Node rt = noderoots.remove(0);
+			Element rt = noderoots.remove(0);
 			rt.setTextContent(sc.hasText()?sc.getText():"");
 			if(sc.hasAttributes()){
 				Enumeration<String> attributesNames = sc.getAllAttributesNames();
-				for(String attributeName = attributesNames.nextElement(); attributesNames.hasMoreElements(); 
-						attributeName = attributesNames.nextElement()){
-					Attr Attribute = this.document.createAttribute(attributeName);
-					Attribute.setValue(sc.getAttributeValue(attributeName));
+				while(attributesNames.hasMoreElements()){
+					String attributeName = attributesNames.nextElement();
+					rt.setAttribute(attributeName, sc.getAttributeValue(attributeName));
 				}
 			}
 			Enumeration<Configuration> children = sc.getAllChildren();
 			Configuration child = null;
 			while(children.hasMoreElements()){
 				child = children.nextElement();
-				Node toadd = this.document.createElement(child.getName());
+				Element toadd = this.document.createElement(child.getName());
 				rt.appendChild(toadd);
 				subroots.add(child);
 				noderoots.add(toadd);
@@ -101,12 +101,14 @@ public class SystemConfigManager implements XMLDocument{
 	 * Load the XML configuration.Assume the configuration tree has only one 
 	 * root node.
 	 * <hr>
-	 * Implementing notes:<br><br>
+	 * Implementing notes:<br>
+	 * 
+	 * <br>
 	 * @param path
 	 * @return
 	 */
 	@Override
-	public Object parseXML(URI path) {
+	public Configuration parseXML(URI path) {
 		// TODO Auto-generated method stub
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		try {

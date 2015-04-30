@@ -6,24 +6,23 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import NotBeUsedNow.Post;
+import NotBeUsedNow.Request;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import interfaces.Handler;
 import interfaces.MainController;
-import interfaces.Post;
-import interfaces.Request;
 import interfaces.ViewController;
 
 
 public class Main extends Application implements MainController{
 	private Stage stage;
-	private String folerofHandlers;
-	private String folerofViews;
+	private String folderofHandlers;
+	private String folderofViews;
 	private ViewController view;
 	private Hashtable<String, Handler> handlers;
 	private Hashtable<String, ViewController> views;
@@ -46,9 +45,9 @@ public class Main extends Application implements MainController{
 		launch(args);
 	}
 	
-	private Main(String folerofHandlers, String folerofViews){
-		this.folerofHandlers = folerofHandlers;
-		this.folerofViews = folerofHandlers;
+	private Main(String folderofHandlers, String folderofViews){
+		this.folderofHandlers = folderofHandlers;
+		this.folderofViews = folderofHandlers;
 		this.handlers = new Hashtable<String, Handler>();
 		this.views = new Hashtable<String, ViewController>();
 		this.stages = new Hashtable<String, Stage>();
@@ -79,7 +78,7 @@ public class Main extends Application implements MainController{
 		Iterator<Handler> Handlers = loader.iterator();
 		while(Handlers.hasNext()){
 			Handler h = Handlers.next();
-			h.setController(this);
+			//h.setController(this);
 			handlers.put(h.getClass().getSimpleName(), h);
 		}
 	}

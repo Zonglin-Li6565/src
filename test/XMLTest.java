@@ -9,12 +9,11 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import XMLService.Configuration;
-import XMLService.SystemConfigManager;
+import XMLService.XMLService;
 
 public class XMLTest {
 	
@@ -27,13 +26,15 @@ public class XMLTest {
 		root.setName("root");
 		Configuration Child_1 = new Configuration();
 		Child_1.setName("Child_1");
-		Child_1.addAttribute("type", "hello world");
+		
 		Child_1.addAttribute("hi", "hello");
+		Child_1.addAttribute("TTTTTT", "hello world");
 		Configuration Child_2 = new Configuration();
 		Child_2.setName("Child_2");
 		Child_2.setText("hi~~child_2");
 		Configuration grad_ch_1 = new Configuration();
 		grad_ch_1.setName("grad_ch_1");
+		grad_ch_1.addAttribute("Something", "This is gradCh1");
 		Configuration grad_ch_2 = new Configuration();
 		grad_ch_2.setName("grad_ch_2");
 		grad_ch_2.setText("hi~~grad_ch_2");
@@ -47,13 +48,12 @@ public class XMLTest {
 		grad_ch_1.addChild(gg_ch_1);
 		String path = "D:\\Test";
 		Path p = Paths.get(path);
-		SystemConfigManager XMLmanager = new SystemConfigManager();
+		XMLService XMLmanager = new XMLService();
 		XMLmanager.createXML(p.toUri(), root, "test.xml");
 		
 		Node n = xmlTest.document.createElement("tree");
-		String name = n.getNodeName();
 		
-		Path P = Paths.get("D:\\Documents\\NetBeansProjects\\MyWebApplication\\web\\WEB-INF", "dispatcher-servlet.xml");
+		Path P = p.resolve("test.xml");
 		Configuration testSC = (Configuration)
 				XMLmanager.parseXML(P.toUri());
 		try {
@@ -69,7 +69,6 @@ public class XMLTest {
 		//Implements a queue
 		ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 		subroots.add(tree);
-		
 		//Traverse all nodes in the tree
 		//BFS
 		while(subroots.size() > 0){
@@ -78,8 +77,8 @@ public class XMLTest {
 			if(sc.hasAttributes()){
 				System.out.println("Attributes of <"+ sc.getName()+">:");
 				Enumeration<String> attributesNames = sc.getAllAttributesNames();
-				for(String attributeName = attributesNames.nextElement(); attributesNames.hasMoreElements(); 
-						attributeName = attributesNames.nextElement()){
+				while(attributesNames.hasMoreElements()){
+					String attributeName = attributesNames.nextElement();
 					System.out.println("\t" + attributeName + " = " +sc.getAttributeValue(attributeName));
 				}
 			}

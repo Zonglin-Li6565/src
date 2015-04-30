@@ -2,36 +2,15 @@ package interfaces;
 
 import java.io.IOException;
 
-import NotBeUsedNow.Post;
-import NotBeUsedNow.Request;
-
-public interface MainController {
-
-	/**
-	 * 
-	 * @param handlerLocation
-	 */
-	abstract void loadHandler(String handlerLocation);
-	
-	/**
-	 * 
-	 * @param viewLocation
-	 */
-	abstract void loadView(String viewLocation);
-	
-	/**
-	 * 
-	 * @param request
-	 * @return
-	 */
-	abstract int mapRequest(Request request);
-	
-	/**
-	 * 
-	 * @param post
-	 * @return
-	 */
-	abstract int mapPost(Post post);
+/**
+ * <hr>
+ * Implementing notes:<br>
+ * The support for dialog window has not been implemented yet.
+ * <br>
+ * @author Zonglin Li
+ *
+ */
+public interface WindowManager {
 	
 	/**
 	 * Same center as the previous scene
@@ -40,7 +19,7 @@ public interface MainController {
 	 * @throws Exception 
 	 */
 	abstract ViewController replaceSceneContent(String FXlocation, boolean resizeAble) throws Exception;
-	
+
 	/**
 	 * At the indicated location
 	 * @param FXlocation
@@ -80,7 +59,7 @@ public interface MainController {
 	
 	/**
 	 * 
-	 * @param dialogName
+	 * @param viewName
 	 */
 	abstract void shutdownStage(String viewName);
 }

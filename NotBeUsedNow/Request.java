@@ -1,4 +1,4 @@
-package interfaces;
+package NotBeUsedNow;
 
 public interface Request {
 

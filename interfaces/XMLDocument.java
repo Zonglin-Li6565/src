@@ -2,6 +2,8 @@ package interfaces;
 
 import java.net.URI;
 
+import XMLService.Configuration;
+
 public interface XMLDocument {
 	
 	/**
@@ -11,7 +13,7 @@ public interface XMLDocument {
 	 * @param elementTree
 	 * @param name
 	 */
-	public void createXML(URI path, Object elementTree, String name);
+	public void createXML(URI path, Configuration elementTree, String name);
 	
 	/**
 	 * The URI path includes the file name
@@ -19,5 +21,5 @@ public interface XMLDocument {
 	 * @param path
 	 * @return
 	 */
-	public Object parseXML(URI path);
+	public Configuration parseXML(URI path);
 }

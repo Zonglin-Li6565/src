@@ -1,5 +1,7 @@
 package interfaces;
 
+import NotBeUsedNow.Post;
+
 public interface ViewController {
 
 	abstract int handlePost(Post post);
