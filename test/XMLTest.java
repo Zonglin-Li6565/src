@@ -46,7 +46,7 @@ public class XMLTest {
 		Child_1.addChild(grad_ch_1);
 		Child_1.addChild(grad_ch_2);
 		grad_ch_1.addChild(gg_ch_1);
-		String path = "D:\\Test";
+		String path = "D:\\Test\\Test Test";
 		Path p = Paths.get(path);
 		XMLService XMLmanager = new XMLService();
 		XMLmanager.createXML(p.toUri(), root, "test.xml");
@@ -84,7 +84,7 @@ public class XMLTest {
 			}
 			Enumeration<Configuration> children = sc.getAllChildren();
 			Configuration child = null;
-			while(children.hasMoreElements()){
+			while(children != null && children.hasMoreElements()){
 				child = children.nextElement();
 				subroots.add(child);
 			}

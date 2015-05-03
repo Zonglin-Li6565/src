@@ -10,8 +10,6 @@ import java.util.Hashtable;
  *
  */
 public class Configuration {
-	private boolean hasText;
-	private boolean hasAttributes;
 	//cooresponse to the nodeName
 	private String name;
 	//nodeValue if text
@@ -19,12 +17,6 @@ public class Configuration {
 	private Hashtable<String, String> attributes;
 	private Hashtable<String, Configuration> children;
 	
-	public Configuration(){
-		attributes = new Hashtable<String, String>();
-		children = new Hashtable<String, Configuration>();
-		hasText = false;
-		hasAttributes = false;
-	}
 	/**
 	 * @return the name
 	 */
@@ -48,58 +40,82 @@ public class Configuration {
 	 * @param value the value to set
 	 */
 	public void setText(String text) {
-		this.hasText = true;
 		this.text = text;
 	}
 	
 	public void addAttribute(String name, String value){
-		if(!hasAttributes){
-			hasAttributes = true;
+		if(this.attributes == null){
+			attributes = new Hashtable<String, String>();
 		}
 		this.attributes.put(name, value);
 	}
 	
 	public String getAttributeValue(String name){
+		if(attributes == null){
+			return null;
+		}
 		return this.attributes.get(name);
 	}
 	
 	public Enumeration<String> getAllAttributes(){
+		if(this.attributes == null){
+			return null;
+		}
 		return this.attributes.elements();
 	}
 	
 	public Enumeration<String> getAllAttributesNames(){
+		if(this.attributes == null){
+			return null;
+		}
 		return this.attributes.keys();
 	}
 	
 	public void addChild(String name, Configuration c){
+		if(this.children == null){
+			children = new Hashtable<String, Configuration>();
+		}
 		this.children.put(name, c);
 	}
 	
 	public void addChild(Configuration c){
+		if(this.children == null){
+			children = new Hashtable<String, Configuration>();
+		}
 		this.children.put(c.getName(), c);
 	}
 	
 	public Configuration getChild(String name){
+		if(this.children == null){
+			return null;
+		}
 		return this.children.get(name);
 	}
 	
 	public Enumeration<Configuration> getAllChildren(){
+		if(this.children == null){
+			return null;
+		}
 		return this.children.elements();
 	}
 	
 	public boolean hasText(){
-		return this.hasText;
+		return !(this.text == null);
 	}
 	
 	public boolean hasAttributes(){
-		return this.hasAttributes;
+		return !(this.attributes == null);
 	}
 	
-	public void setHastext(boolean hasText){
-		this.hasText = hasText;
-	}
-	
-	public void setHasAttribute(boolean hasattributes){
-		this.hasAttributes = hasattributes;
+	/**
+	 * Remove the child indicated by its name
+	 * @param name
+	 * @return
+	 */
+	public Configuration removeChild(String name){
+		if(this.children != null){
+			return this.children.remove(name);
+		}
+		return null;
 	}
 }

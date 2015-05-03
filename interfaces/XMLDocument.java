@@ -9,6 +9,8 @@ public interface XMLDocument {
 	/**
 	 * Create a new XML document at the indicated path with name name.
 	 * The elementTree model is provided
+	 * The character <code>$</code> is illegal to appear in element tag, text, 
+	 * and attribute
 	 * @param path
 	 * @param elementTree
 	 * @param name
@@ -18,6 +20,8 @@ public interface XMLDocument {
 	/**
 	 * The URI path includes the file name
 	 * Object returned is the elementTree
+	 * The character <code>$</code> is illegal to appear in element tag, text, 
+	 * and attribute
 	 * @param path
 	 * @return
 	 */

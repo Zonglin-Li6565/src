@@ -5,7 +5,7 @@ import MessageContainer.Get;
 import MessageContainer.Request;
 import MessageContainer.Update;
 
-public interface MappingAble {
+public interface Mapper{
 	/**
 	 * Load the Handler class from the location designated
 	 * The location should contain the jar file that contains
@@ -45,20 +45,4 @@ public interface MappingAble {
 	 * @return
 	 */
 	abstract int mapUpdate(Update<?> update);
-	
-	/**
-	 * Map Get from Handler to Model
-	 * Return 0 if finished
-	 * @param get
-	 * @return
-	 */
-	abstract int mapGet(Get<?, ?> get);
-	
-	/**
-	 * Map the resources container from Model to Handler
-	 * Return 0 if finished
-	 * @param box
-	 * @return
-	 */
-	abstract int mapBox(Box<?> box);
 }

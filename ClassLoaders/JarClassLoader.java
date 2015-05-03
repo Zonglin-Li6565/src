@@ -1,16 +1,15 @@
 package ClassLoaders;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Properties;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -25,80 +24,56 @@ import XMLService.XMLService;
  *
  */
 public class JarClassLoader {
-	private Properties classRank;
+	
+	private URI pluginfoxmlLocation;
+	
 	public static JarClassLoader classLoader;
-	private final double TRASHOLD = 0.5;
-	private Hashtable<String, Class<?>> classCach;
-	private URI preferenceXML;
 
-	private JarClassLoader(URI preferenceXML) throws IOException{
-		this.preferenceXML = preferenceXML;
-		File f = new File(this.preferenceXML);
-		classCach = new Hashtable<String, Class<?>>();
-		if(!f.exists()){
-			classRank = new Properties();
-			classRank.setProperty("Total Using Times", "0");
-		}else{
-			classRank = new Properties();
-			FileInputStream fin = new FileInputStream(f);
-			classRank.load(fin);
-			fin.close();
-		}
-		
+	private JarClassLoader(URI pluginfoxmlLocation){
+		this.pluginfoxmlLocation = pluginfoxmlLocation;
 	}
 	
-	public static synchronized JarClassLoader getJarClassLoader(URI settingLocation){
+	public static synchronized JarClassLoader getJarClassLoader(URI pluginfoxmlLocation){
 		if(classLoader != null){
 			return classLoader;
 		}else{
-			try {
-				classLoader = new JarClassLoader(settingLocation);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			classLoader = new JarClassLoader(pluginfoxmlLocation);
 			return classLoader;
 		}
 	}
 	
+	/*
 	public Configuration pluginPathResolver(URI SystemConfigLocation) 
 			throws ParserConfigurationException{
-		XMLService xmlS = new XMLService();
+		XMLService xmlS = XMLService.getInstance();
 		Configuration SystemSetting = xmlS.parseXML(SystemConfigLocation);
 		ArrayList<String> plugInJarlocations = 
 				tranverseNodes(SystemSetting,"PluginDirectory");
-		
 		return null;
 	}
+	*/
 	
-	public Class<?> loadClass(URI jarLocation, String Name, Configuration cg) throws Exception{
-		Class<?> clazz = classCach.get(Name);
-		if(clazz == null){
-			String className = cg.getChild(Name).getText();
-			if(className == null){
-				throw new Exception("No classpath location found");
-			}
-			URL[] urls = { new URL("jar:file:" + jarLocation+"!/") };
-			URLClassLoader cl = URLClassLoader.newInstance(urls);
-			clazz = cl.loadClass(className);
+	public Class<?> loadClass(String jarLocation, String Name) throws Exception{
+		Class<?> clazz = null;
+		XMLService xmlSevice = XMLService.getInstance();
+		//URL location = new URL("jar:file:" + "D:\\Test\\SayHello.jar"+"!/" + "config.xml");
+		URL location = new URL("jar:file:" + jarLocation +"!/" + "config.xml");
+		InputStream is = location.openStream();
+		Configuration cg = xmlSevice.parseXML(is);
+		//String className = "." + cg.getChild(Name).getText();
+		String className = cg.getChild(Name).getText();
+		if(className == null){
+			throw new Exception("No classpath location found");
 		}
-		String rank = classRank.getProperty(clazz.getName());
-		int totalTime = Integer.parseInt(classRank.getProperty("Total Using Times"));
-		if(rank == null){
-			classRank.setProperty(clazz.getName(), "1");
-			classRank.setProperty("Total Using Times", totalTime + 1 + "");
-		}else{
-			int timeUsed = Integer.parseInt(rank);
-			
-			classRank.setProperty(clazz.getName(), timeUsed + "");
-			if((double)timeUsed / totalTime > TRASHOLD){
-				classCach.put(Name, clazz);
-			}
-		}
-		savePreference();
+		URL[] urls = { new URL("jar:file:" + jarLocation+"!/") };
+		//URL[] urls = { new URL("jar:file:" + "D:\\Test\\SayHello.jar"+"!/") };
+		URLClassLoader cl = URLClassLoader.newInstance(urls);
+		clazz = cl.loadClass(className);
+		is.close();
 		return clazz;
 	}
 	
+	/*
 	public void savePreference(){
 		File f = new File(this.preferenceXML);
 		try {
@@ -110,6 +85,7 @@ public class JarClassLoader {
 		}
 		
 	}
+	*/
 	
 	public ArrayList<String> tranverseNodes(Configuration tree, String nodeName) 
 			throws ParserConfigurationException{
@@ -137,7 +113,75 @@ public class JarClassLoader {
 		return results;
 	}
 	
-	public void scanPlugins(URI location){
-		
+	/**
+	 * Scan the directories where plug in jar files are in
+	 * update the plugin.info.xml file as checking.
+	 * @param locationofJars
+	 */
+	public void scanPlugins(String locationofJars){
+		//load plugin.info.xml
+		XMLService xml = XMLService.getInstance();
+		Configuration pluginfo = xml.parseXML(pluginfoxmlLocation);
+		Enumeration<Configuration> children = pluginfo.getAllChildren();
+		while(children.hasMoreElements()){
+			Configuration child = children.nextElement();
+			if(child.getName().startsWith("directory")){
+				scanHelper(child, null);
+			}
+		}
+	}
+	
+	/**
+	 * Help <code>scanPlugins</code> to perform DFS tranverse 
+	 * of the setting tree<br>
+	 * If return 0
+	 * <hr>
+	 * Implementing notes:<br>
+	 * <b>Using naive matching algorithm. O(m + n) Improvement required</b>
+	 * <br>
+	 * @param node: the <b>directory</b> will be scanned
+	 */
+	public void scanHelper(Configuration node, Path parentLocation){	
+		String location = node.getAttributeValue("path");
+		Path directoryLocation = null;
+		if(parentLocation == null){
+			directoryLocation = Paths.get(location);
+		}else{
+			directoryLocation = parentLocation.resolve(location);
+		}
+		Hashtable<String, String> tempforPNodes = new Hashtable<String, String>();
+		Enumeration<Configuration> children = node.getAllChildren();
+		while(children.hasMoreElements()){
+			Configuration next = children.nextElement();
+			if(next.getName().equals("directory")){
+				scanHelper(next,directoryLocation);
+			}
+			if(next.hasText()){
+				tempforPNodes.put(next.getText(), next.getName());
+			}
+		}
+		File[] files = directoryLocation.toFile().listFiles();
+		for(File f : files){
+			if(!f.getName().endsWith(".jar")){continue;}
+			if(tempforPNodes.get(f.getName()) != null){   //matched
+				tempforPNodes.remove(f.getName());
+			}else{										//does not match
+				//add the file as a child of current Configuration
+				int j = 1;
+				while(node.getChild("plugin" + "$" + j) != null){
+					j++;
+				}
+				Configuration newNode = new Configuration();
+				newNode.setName("plugin" + "$" + j);
+				newNode.setText(f.getName());
+				node.addChild(newNode);
+			}
+			//remove the useless nodes in this Configuration
+			Enumeration<String> allKeys = tempforPNodes.keys();
+			while(allKeys.hasMoreElements()){
+				String tagName = tempforPNodes.get(allKeys.nextElement());
+				node.removeChild(tagName);
+			}
+		}
 	}
 }

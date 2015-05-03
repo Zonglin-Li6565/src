@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directories>
+	<directory path="D:\Test">
+		<plugin>SayHello.jar</plugin>
+		<directory path="\Test Test">
+			<plugin>SayHello.jar</plugin>
+		</directory>
+	</directory>
+	<directory path="D:\Test\Test Test">
+		<plugin>SayHello.jar</plugin>
+	</directory>
+</directories>

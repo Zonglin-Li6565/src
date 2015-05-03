@@ -1,4 +1,4 @@
-package interfaces;
+package NotBeUsedNow;
 
 import MessageContainer.Get;
 

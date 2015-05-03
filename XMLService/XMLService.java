@@ -5,6 +5,7 @@ import interfaces.XMLDocument;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.file.Path;
@@ -33,8 +34,9 @@ import org.xml.sax.SAXException;
 public class XMLService implements XMLDocument{
 	
 	private Document document; 
+	public static XMLService instance;
 	
-	public XMLService(){
+	private XMLService(){
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -45,6 +47,12 @@ public class XMLService implements XMLDocument{
 			e.printStackTrace();
 		}
 	}
+	
+	public synchronized static XMLService getInstance(){
+		instance = instance == null? new XMLService(): instance;
+		return instance;
+	}
+	
 	
 	@Override
 	public void createXML(URI path, Configuration elementTree, String name) {
@@ -75,8 +83,12 @@ public class XMLService implements XMLDocument{
 			}
 			Enumeration<Configuration> children = sc.getAllChildren();
 			Configuration child = null;
-			while(children.hasMoreElements()){
+			while(children != null && children.hasMoreElements()){
 				child = children.nextElement();
+				String Name = child.getName();
+				if(Name.indexOf("$") != -1){
+					Name = Name.substring(0, Name.indexOf("$"));
+				}
 				Element toadd = this.document.createElement(child.getName());
 				rt.appendChild(toadd);
 				subroots.add(child);
@@ -98,8 +110,10 @@ public class XMLService implements XMLDocument{
 	}
 
 	/**
-	 * Load the XML configuration.Assume the configuration tree has only one 
-	 * root node.
+	 * Load the XML configuration. Assume the configuration tree has only one 
+	 * root node.<br>
+	 * <b>The character <code>$</code> is illegal to appear in element tag, text, 
+	 * and attribute.</b>
 	 * <hr>
 	 * Implementing notes:<br>
 	 * 
@@ -156,7 +170,71 @@ public class XMLService implements XMLDocument{
 						}
 						
 					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
-						sc.setHastext(true);
+						sc.setText(current.getNodeValue());
+					}
+				}
+			}
+			return SCroot;
+		} catch (ParserConfigurationException | SAXException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Read the xml file as an inputstream.
+	 * @param stream
+	 * @return
+	 */
+	public Configuration parseXML(InputStream stream) {
+		// TODO Auto-generated method stub
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		try {
+			DocumentBuilder db = dbf.newDocumentBuilder();
+			Document document = db.parse(stream);
+			NodeList configs = document.getChildNodes();
+			//Implement two queues
+			ArrayList<Configuration> subroots = new ArrayList<Configuration>();
+			ArrayList<Node> noderoots = new ArrayList<Node>();
+			//ONLY the first one node will be added to the queue
+			Node root = (Node) configs.item(0);
+			Configuration SCroot = new Configuration();
+			//Add the two objects to the queue
+			subroots.add(SCroot);
+			noderoots.add(root);
+			//BFS
+			while(noderoots.size() > 0){
+				Configuration sc = subroots.remove(0);					//get the first one
+				Node rt = noderoots.remove(0);							//same
+				NamedNodeMap map = rt.getAttributes();
+				sc.setName(rt.getNodeName());
+				if(map != null){
+					for(int i = 0; i < map.getLength(); i++){
+						Attr attr = (Attr)map.item(i);
+						sc.addAttribute(attr.getName(), attr.getValue());
+					}
+				}
+				
+				for(int i = 0; i < rt.getChildNodes().getLength(); i++){
+					Node current = (Node) rt.getChildNodes().item(i);
+					Configuration newNode = new Configuration();
+					short nodeType = current.getNodeType();
+					if(nodeType == Node.ELEMENT_NODE){
+						subroots.add(newNode);
+						noderoots.add(current);
+						//test whether the name already exists
+						if(sc.getChild(current.getNodeName()) == null){
+							sc.addChild(current.getNodeName(), newNode);
+						}else{
+							int j = 2;
+							while(sc.getChild(current.getNodeName() + "$" + j) != null){
+								j++;
+							}
+							sc.addChild(current.getNodeName() + "$" + j, newNode);
+						}
+						
+					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
 						sc.setText(current.getNodeValue());
 					}
 				}
