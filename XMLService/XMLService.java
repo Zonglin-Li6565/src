@@ -78,6 +78,9 @@ public class XMLService implements XMLDocument{
 				Enumeration<String> attributesNames = sc.getAllAttributesNames();
 				while(attributesNames.hasMoreElements()){
 					String attributeName = attributesNames.nextElement();
+					System.out.println("for test XMLService line 81: "
+							+ "attributeName=" + attributeName +
+							"attributeValue=" + sc.getAttributeValue(attributeName));
 					rt.setAttribute(attributeName, sc.getAttributeValue(attributeName));
 				}
 			}
@@ -89,7 +92,12 @@ public class XMLService implements XMLDocument{
 				if(Name.indexOf("$") != -1){
 					Name = Name.substring(0, Name.indexOf("$"));
 				}
-				Element toadd = this.document.createElement(child.getName());
+				
+				System.out.println("For Test. Child.getName is " + child.getName() + 
+						" in XMLService line 94" + 
+						" index of $ for child.getName(): " + child.getName().indexOf("$") + 
+						" Name: " + Name);
+				Element toadd = this.document.createElement(Name);
 				rt.appendChild(toadd);
 				subroots.add(child);
 				noderoots.add(toadd);

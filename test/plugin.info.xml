@@ -2,11 +2,14 @@
 <directories>
 	<directory path="D:\Test">
 		<plugin>SayHello.jar</plugin>
+			<class classpath="SayHello">SayHelloClass</class>
 		<directory path="\Test Test">
 			<plugin>SayHello.jar</plugin>
+				<class classpath="SayHello">SayHelloClass</class>
 		</directory>
 	</directory>
 	<directory path="D:\Test\Test Test">
 		<plugin>SayHello.jar</plugin>
+			<class classpath="SayHello">SayHelloClass</class> 
 	</directory>
 </directories>

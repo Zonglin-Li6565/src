@@ -46,14 +46,12 @@ public class XMLTest {
 		Child_1.addChild(grad_ch_1);
 		Child_1.addChild(grad_ch_2);
 		grad_ch_1.addChild(gg_ch_1);
-		String path = "D:\\Test\\Test Test";
+		String path = "D:\\Test";
 		Path p = Paths.get(path);
-		XMLService XMLmanager = new XMLService();
-		XMLmanager.createXML(p.toUri(), root, "test.xml");
+		XMLService XMLmanager = XMLService.getInstance();
+		//XMLmanager.createXML(p.toUri(), root, "test.xml");
 		
-		Node n = xmlTest.document.createElement("tree");
-		
-		Path P = p.resolve("test.xml");
+		Path P = p.resolve("plugin.info.xml");
 		Configuration testSC = (Configuration)
 				XMLmanager.parseXML(P.toUri());
 		try {
