@@ -157,7 +157,7 @@ public class JarClassLoader {
 		InputStream in = pluginfoxmlLocation.toURL().openStream();
 		Configuration pluginfo = xml.parseXML(in);
 		Enumeration<Configuration> children = pluginfo.getAllChildren();
-		while(children.hasMoreElements()){
+		while(children != null && children.hasMoreElements()){
 			Configuration child = children.nextElement();
 			if(child.getName().startsWith("directory")){
 				scanHelper(child, null, openAllJars);
@@ -189,16 +189,23 @@ public class JarClassLoader {
 		Enumeration<Configuration> children = node.getAllChildren();
 		while(children != null && children.hasMoreElements()){
 			Configuration next = children.nextElement();
-			if(next.getName().equals("directory")){
+			String Name = next.getName();
+			if(Name.indexOf("$") != -1){
+				Name = Name.substring(0, Name.indexOf("$"));
+			}
+			if(Name.equals("directory")){
 				scanHelper(next,directoryLocation, openAllJars);
 				continue;
 			}
+			//System.out.println("Class loader" + next.getAttributeValue("jarName"));
+			System.out.println(next.getName());
 			tempforPNodes.put(next.getAttributeValue("jarName"), next.getName());
 		}
 		File[] files = directoryLocation.toFile().listFiles();
 		for(File f : files){
 			if(!f.getName().endsWith(".jar")){continue;}
-			if(tempforPNodes.get(f.getName()) != null){   //matched
+			//if(tempforPNodes.get(f.getName()) != null){   //matched
+			if(tempforPNodes.containsKey(f.getName())){
 				tempforPNodes.remove(f.getName());
 			}else{										//does not match
 				//add the file as a child of current Configuration
@@ -210,21 +217,20 @@ public class JarClassLoader {
 				newNode.setName("plugin" + "$" + j);
 				newNode.addAttribute("jarName", f.getName());
 				node.addChild(newNode);
-				if(openAllJars){
-					try {
-						scanJar(newNode,directoryLocation.resolve(f.getName()));
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
+				/*try {
+					scanJar(newNode,directoryLocation.resolve(f.getName()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}*/
 			}
 			//remove the useless nodes in this Configuration
-			Enumeration<String> allKeys = tempforPNodes.keys();
-			while(allKeys.hasMoreElements()){
-				String tagName = tempforPNodes.get(allKeys.nextElement());
-				node.removeChild(tagName);
-			}
+			
+		}
+		Enumeration<String> allKeys = tempforPNodes.keys();
+		while(allKeys.hasMoreElements()){
+			String tagName = tempforPNodes.get(allKeys.nextElement());
+			node.removeChild(tagName);
 		}
 	}
 	

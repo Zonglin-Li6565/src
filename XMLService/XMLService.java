@@ -63,7 +63,11 @@ public class XMLService implements XMLDocument{
 		//Implements a queue
 		ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 		subroots.add(tree);
-		Element root = this.document.createElement(tree.getName());
+		String rootName = tree.getName();
+		if(rootName.indexOf("$") != -1){
+			rootName = rootName.substring(0, rootName.indexOf("$"));
+		}
+		Element root = this.document.createElement(rootName);
 		this.document.appendChild(root); 
 		//Implements a queue
 		ArrayList<Element> noderoots = new ArrayList<Element>();
@@ -78,9 +82,6 @@ public class XMLService implements XMLDocument{
 				Enumeration<String> attributesNames = sc.getAllAttributesNames();
 				while(attributesNames.hasMoreElements()){
 					String attributeName = attributesNames.nextElement();
-					System.out.println("for test XMLService line 81: "
-							+ "attributeName=" + attributeName +
-							"attributeValue=" + sc.getAttributeValue(attributeName));
 					rt.setAttribute(attributeName, sc.getAttributeValue(attributeName));
 				}
 			}
@@ -92,11 +93,6 @@ public class XMLService implements XMLDocument{
 				if(Name.indexOf("$") != -1){
 					Name = Name.substring(0, Name.indexOf("$"));
 				}
-				
-				System.out.println("For Test. Child.getName is " + child.getName() + 
-						" in XMLService line 94" + 
-						" index of $ for child.getName(): " + child.getName().indexOf("$") + 
-						" Name: " + Name);
 				Element toadd = this.document.createElement(Name);
 				rt.appendChild(toadd);
 				subroots.add(child);
@@ -167,15 +163,14 @@ public class XMLService implements XMLDocument{
 						subroots.add(newNode);
 						noderoots.add(current);
 						//test whether the name already exists
-						if(sc.getChild(current.getNodeName()) == null){
-							sc.addChild(current.getNodeName(), newNode);
-						}else{
-							int j = 2;
-							while(sc.getChild(current.getNodeName() + "$" + j) != null){
-								j++;
-							}
-							sc.addChild(current.getNodeName() + "$" + j, newNode);
+						//sc.addChild(current.getNodeName(), newNode);
+						int j = 1;
+						while(sc.getChild(current.getNodeName() + "$" + j) != null){
+							j++;
 						}
+						//sc.addChild(current.getNodeName() + "$" + j, newNode);
+						newNode.setName(current.getNodeName() + "$" + j);
+						sc.addChild(newNode);
 						
 					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
 						sc.setText(current.getNodeValue());
@@ -216,11 +211,19 @@ public class XMLService implements XMLDocument{
 				Configuration sc = subroots.remove(0);					//get the first one
 				Node rt = noderoots.remove(0);							//same
 				NamedNodeMap map = rt.getAttributes();
-				sc.setName(rt.getNodeName());
+				int j = 1;
+				while(sc.hasParent() && 
+						sc.getParent().getChild(rt.getNodeName() + "$" + j) != null){
+					j++;
+				}
+				//sc.addChild(current.getNodeName() + "$" + j, newNode);
+				sc.setName(rt.getNodeName() + "$" + j);
+				if(sc.hasParent()) {sc.getParent().addChild(sc);}
 				if(map != null){
 					for(int i = 0; i < map.getLength(); i++){
 						Attr attr = (Attr)map.item(i);
 						sc.addAttribute(attr.getName(), attr.getValue());
+						System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
 					}
 				}
 				
@@ -229,24 +232,18 @@ public class XMLService implements XMLDocument{
 					Configuration newNode = new Configuration();
 					short nodeType = current.getNodeType();
 					if(nodeType == Node.ELEMENT_NODE){
+						//test whether the name already exists
+						//sc.addChild(current.getNodeName(), newNode);
+						//sc.addChild(newNode);
+						newNode.setParent(sc);
 						subroots.add(newNode);
 						noderoots.add(current);
-						//test whether the name already exists
-						if(sc.getChild(current.getNodeName()) == null){
-							sc.addChild(current.getNodeName(), newNode);
-						}else{
-							int j = 2;
-							while(sc.getChild(current.getNodeName() + "$" + j) != null){
-								j++;
-							}
-							sc.addChild(current.getNodeName() + "$" + j, newNode);
-						}
-						
 					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
 						sc.setText(current.getNodeValue());
 					}
 				}
 			}
+			System.out.println("line 246 XMLService ");
 			return SCroot;
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			// TODO Auto-generated catch block

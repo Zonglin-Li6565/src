@@ -1,5 +1,8 @@
 package test;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -19,7 +22,7 @@ public class XMLTest {
 	
 	private Document document; 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws MalformedURLException, IOException {
 		// TODO Auto-generated method stub
 		XMLTest xmlTest = new XMLTest();
 		Configuration root = new Configuration();
@@ -52,8 +55,9 @@ public class XMLTest {
 		//XMLmanager.createXML(p.toUri(), root, "test.xml");
 		
 		Path P = p.resolve("plugin.info.xml");
+		InputStream is = P.toUri().toURL().openStream();
 		Configuration testSC = (Configuration)
-				XMLmanager.parseXML(P.toUri());
+				XMLmanager.parseXML(is);
 		try {
 			xmlTest.tranverseNodes(testSC);
 		} catch (ParserConfigurationException e) {

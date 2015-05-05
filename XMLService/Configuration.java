@@ -16,6 +16,7 @@ public class Configuration {
 	private String text;
 	private Hashtable<String, String> attributes;
 	private Hashtable<String, Configuration> children;
+	private Configuration parent;
 	
 	/**
 	 * @return the name
@@ -75,6 +76,7 @@ public class Configuration {
 		if(this.children == null){
 			children = new Hashtable<String, Configuration>();
 		}
+		c.setParent(this);
 		this.children.put(name, c);
 	}
 	
@@ -82,6 +84,7 @@ public class Configuration {
 		if(this.children == null){
 			children = new Hashtable<String, Configuration>();
 		}
+		c.setParent(this);
 		this.children.put(c.getName(), c);
 	}
 	
@@ -117,5 +120,33 @@ public class Configuration {
 			return this.children.remove(name);
 		}
 		return null;
+	}
+	
+	/**
+	 * Set the parent of this node
+	 * @param parent
+	 */
+	public void setParent(Configuration parent){
+		this.parent = parent;
+	}
+	
+	/**
+	 * Return the parent of this node. null if doesn't have.
+	 * @return
+	 */
+	public Configuration getParent(){
+		return this.parent;
+	}
+	
+	public boolean hasParent(){
+		return !(this.parent == null);
+	}
+	
+	public String toString(){
+		String toReturn = "";
+		toReturn += "Name: " + this.name + " ";
+		toReturn += "Text: " + this.text + "\n";
+		toReturn += "Attributes: " + this.attributes;
+		return toReturn;
 	}
 }

@@ -8,6 +8,11 @@ import java.nio.file.Paths;
 import XMLService.XMLService;
 import ClassLoaders.JarClassLoader;
 
+/**
+ * 
+ * @author Zonglin Li
+ *
+ */
 public class ClassLoadTest {
 
 	public static void main(String[] args) throws Exception {
