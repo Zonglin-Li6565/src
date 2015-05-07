@@ -59,7 +59,7 @@ public class JarClassLoader {
 	 * The <code>String Name </code> passed to this method should be <b>name of 
 	 * tag of that class</b> in the config.xml inside the jar file in which 
 	 * the class is in. Please note that the <code>String Name </code> passed to 
-	 * this method is not the one get by calling <code>getClass().getName()</code>,
+	 * this method is NOT the one get by calling <code>getClass().getName()</code>,
 	 * which is the name of the class recognized by the compiler.
 	 * <hr><b>Implementing notes:</b><br>
 	 * Algorithm used: BFS.<br> So not suitable for tracing back to fetch the 
@@ -89,6 +89,10 @@ public class JarClassLoader {
 		clazz = cl.loadClass(className);
 		is.close();
 		return clazz;
+	}
+	
+	public Path classLocationFetcher(){
+		return null;
 	}
 	
 	/*
@@ -206,7 +210,15 @@ public class JarClassLoader {
 			if(!f.getName().endsWith(".jar")){continue;}
 			//if(tempforPNodes.get(f.getName()) != null){   //matched
 			if(tempforPNodes.containsKey(f.getName())){
-				tempforPNodes.remove(f.getName());
+				String pluginName = tempforPNodes.remove(f.getName());
+				if(openAllJars){
+					try {
+						scanJar(node.getChild(pluginName),directoryLocation.resolve(f.getName()));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 			}else{										//does not match
 				//add the file as a child of current Configuration
 				int j = 1;
@@ -217,12 +229,12 @@ public class JarClassLoader {
 				newNode.setName("plugin" + "$" + j);
 				newNode.addAttribute("jarName", f.getName());
 				node.addChild(newNode);
-				/*try {
+				try {
 					scanJar(newNode,directoryLocation.resolve(f.getName()));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}*/
+				}
 			}
 			//remove the useless nodes in this Configuration
 			
@@ -239,27 +251,28 @@ public class JarClassLoader {
 		URL location = new URL("jar:file:" + jarLocation.toString() +"!/" + "config.xml");
 		InputStream is = location.openStream();
 		Configuration Paths = xmlSevice.parseXML(is);
-		Hashtable <String, String> tempforClasses = new Hashtable <String, String>();
+		//tempforClasses: The class information in the plugin.info.xml
+		Hashtable <String, Configuration> tempforClasses = new Hashtable <String, Configuration>();
 		//copy all class information already in pluginNode to the hash table. 
 		//The key is the class name named by the customer, element is the tag name
 		//recognized by complier
 		System.out.println("First loop in scanJar starts");
-		Enumeration<Configuration> classes = Paths.getAllChildren();
+		Enumeration<Configuration> classes = pluginNode.getAllChildren();
 		while (classes != null && classes.hasMoreElements()){
 			Configuration clazz = classes.nextElement();
-			tempforClasses.put(clazz.getText(), clazz.getName());
+			//clazz.getText() gets the class name;
+			//clazz.getName() gets the class name;
+			tempforClasses.put(clazz.getAttributeValue("classpath"),clazz);
 		}
-		Enumeration<Configuration> classInfos = Paths.getAllChildren();
+		//All the information of class paths in the file config.xml
+		Enumeration<Configuration> classPaths = Paths.getAllChildren();
 		//Traverse the config.xml file in jar
-		System.out.println("Second loop in scanJar starts");
-		while(classInfos != null && classInfos.hasMoreElements()){
-			Configuration clazz = classInfos.nextElement(); // the class information in config.xml
+		while(classPaths != null && classPaths.hasMoreElements()){
+			Configuration clazz = classPaths.nextElement(); // the class information in config.xml
 			//check whether this class information has already in the plugin.info.xml
-			if(tempforClasses.get(clazz.getText()) != null &&
-				//to get the class path of this class information
-				pluginNode.getChild(tempforClasses.get(clazz.getText())) != null &&
-				pluginNode.getChild(tempforClasses.get(clazz.getText())).
-				getAttributeValue("classpath").equals(clazz.getText())){
+			//clazz.getName() gets the class name; clazz.getText() gets the class path
+			Configuration classRecorded = tempforClasses.get(clazz.getText());
+			if(classRecorded != null && classRecorded.getText().equals(clazz.getName())){
 				//matched
 				tempforClasses.remove(clazz.getText());
 			}else {
@@ -276,13 +289,12 @@ public class JarClassLoader {
 				toAdd.setText(clazz.getName());
 				pluginNode.addChild(toAdd);
 			}
-			//remove the haven't matched class information
-			Enumeration<String> toRemove = tempforClasses.elements();
-			System.out.println("First loop in the loop in scanJars starts");
-			while(toRemove.hasMoreElements()){
-				String classinfoName = toRemove.nextElement();
-				pluginNode.removeChild(classinfoName);
-			}
+		}
+		//remove the haven't matched class information
+		Enumeration<Configuration> toRemove = tempforClasses.elements();
+		while(toRemove.hasMoreElements()){
+			String classinfoName = toRemove.nextElement().getName();
+			pluginNode.removeChild(classinfoName);
 		}
 	}
 }

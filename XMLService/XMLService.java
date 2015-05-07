@@ -77,7 +77,11 @@ public class XMLService implements XMLDocument{
 		while(subroots.size() > 0){
 			Configuration sc = subroots.remove(0);
 			Element rt = noderoots.remove(0);
-			rt.setTextContent(sc.hasText()?sc.getText():"");
+			String Text = sc.hasText()?sc.getText():"";
+			if(Text.indexOf("$") != -1){
+				Text = Text.substring(0, Text.indexOf("$"));
+			}
+			rt.setTextContent(Text);
 			if(sc.hasAttributes()){
 				Enumeration<String> attributesNames = sc.getAllAttributesNames();
 				while(attributesNames.hasMoreElements()){
@@ -133,7 +137,6 @@ public class XMLService implements XMLDocument{
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			Document document = db.parse(Paths.get(path).toFile());
 			NodeList configs = document.getChildNodes();
-			//Implement two queues
 			ArrayList<Configuration> subroots = new ArrayList<Configuration>();
 			ArrayList<Node> noderoots = new ArrayList<Node>();
 			//ONLY the first one node will be added to the queue
@@ -147,11 +150,19 @@ public class XMLService implements XMLDocument{
 				Configuration sc = subroots.remove(0);					//get the first one
 				Node rt = noderoots.remove(0);							//same
 				NamedNodeMap map = rt.getAttributes();
-				sc.setName(rt.getNodeName());
+				int j = 1;
+				while(sc.hasParent() && 
+						sc.getParent().getChild(rt.getNodeName() + "$" + j) != null){
+					j++;
+				}
+				//sc.addChild(current.getNodeName() + "$" + j, newNode);
+				sc.setName(rt.getNodeName() + "$" + j);
+				if(sc.hasParent()) {sc.getParent().addChild(sc);}
 				if(map != null){
 					for(int i = 0; i < map.getLength(); i++){
 						Attr attr = (Attr)map.item(i);
 						sc.addAttribute(attr.getName(), attr.getValue());
+						System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
 					}
 				}
 				
@@ -160,18 +171,12 @@ public class XMLService implements XMLDocument{
 					Configuration newNode = new Configuration();
 					short nodeType = current.getNodeType();
 					if(nodeType == Node.ELEMENT_NODE){
-						subroots.add(newNode);
-						noderoots.add(current);
 						//test whether the name already exists
 						//sc.addChild(current.getNodeName(), newNode);
-						int j = 1;
-						while(sc.getChild(current.getNodeName() + "$" + j) != null){
-							j++;
-						}
-						//sc.addChild(current.getNodeName() + "$" + j, newNode);
-						newNode.setName(current.getNodeName() + "$" + j);
-						sc.addChild(newNode);
-						
+						//sc.addChild(newNode);
+						newNode.setParent(sc);
+						subroots.add(newNode);
+						noderoots.add(current);
 					}else if (nodeType == Node.TEXT_NODE && !sc.hasText() && !current.getNodeValue().equals("\n")){
 						sc.setText(current.getNodeValue());
 					}
@@ -243,7 +248,6 @@ public class XMLService implements XMLDocument{
 					}
 				}
 			}
-			System.out.println("line 246 XMLService ");
 			return SCroot;
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			// TODO Auto-generated catch block
