@@ -1,10 +1,10 @@
 package NotBeUsedNow;
 
-import MessageContainer.Get;
+import interfaces.Mapper;
 
 public interface Model {
 
 	public abstract int handleGet(Get<?, ?> get);
 	
-	public abstract void setMapper(MappingAble mapper);
+	public abstract void setMapper(Mapper mapper);
 }

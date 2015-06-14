@@ -55,7 +55,7 @@ public class XMLService implements XMLDocument{
 	
 	
 	@Override
-	public void createXML(URI path, Configuration elementTree, String name) {
+	public synchronized void createXML(URI path, Configuration elementTree, String name) {
 		// TODO Auto-generated method stub
 		Path filePath = Paths.get(path);
 		filePath = filePath.resolve(name);
@@ -162,7 +162,7 @@ public class XMLService implements XMLDocument{
 					for(int i = 0; i < map.getLength(); i++){
 						Attr attr = (Attr)map.item(i);
 						sc.addAttribute(attr.getName(), attr.getValue());
-						System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
+						//System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
 					}
 				}
 				
@@ -228,7 +228,7 @@ public class XMLService implements XMLDocument{
 					for(int i = 0; i < map.getLength(); i++){
 						Attr attr = (Attr)map.item(i);
 						sc.addAttribute(attr.getName(), attr.getValue());
-						System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
+						//System.out.println("added " + attr.getName() + " attribute; value :" + attr.getValue());
 					}
 				}
 				

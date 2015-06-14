@@ -1,4 +1,4 @@
-package MessageContainer;
+package NotBeUsedNow;
 
 import java.util.Enumeration;
 import java.util.Hashtable;

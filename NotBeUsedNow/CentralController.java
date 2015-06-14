@@ -1,24 +1,11 @@
-package interfaces;
+package NotBeUsedNow;
+
+import interfaces.Handler;
+import interfaces.ViewController;
 
 import java.util.Hashtable;
 
-public abstract class CentralController {
-
-	
-	/*
-	 * Used to store some frequently used Classes have 
-	 * implemented Handler interface.
-	 * The goal to do this is to reduce the number of 
-	 * time of loading that class.
-	 */
-	private Hashtable<String, Class<?>> handlers;
-	
-	/*
-	 * The goal is same as above. But 
-	 * The actual objects are stored in the 
-	 * table, not the class.
-	 */
-	private Hashtable<String, ViewController> views;
+public interface CentralController {
 	
 	/**
 	 * For Mapper to call. 
@@ -40,6 +27,6 @@ public abstract class CentralController {
 	public abstract Handler getHandler(String name);
 	
 	public abstract ViewController getView(String name);
-	
+
 	public abstract void main(String args[]);
 }

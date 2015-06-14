@@ -25,14 +25,27 @@ import XMLService.XMLService;
  * @author Zonglin Li
  *
  */
-public class JarClassLoader {
+public class JarClassLoader{
 	
-	private URI pluginfoxmlLocation;
+	private URI handlerinfoxmlLocation;
 	
 	public static JarClassLoader classLoader;
 
-	private JarClassLoader(URI pluginfoxmlLocation){
-		this.pluginfoxmlLocation = pluginfoxmlLocation;
+	private JarClassLoader(URI handlerinfoxmlLocation){
+		this.handlerinfoxmlLocation = handlerinfoxmlLocation;
+		try {
+			scanPlugins(true);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public JarClassLoader getOneInstance(URI pluginfoxmlLocation) {
+		return getJarClassLoader(pluginfoxmlLocation);
 	}
 	
 	public static synchronized JarClassLoader getJarClassLoader(URI pluginfoxmlLocation){
@@ -43,17 +56,6 @@ public class JarClassLoader {
 			return classLoader;
 		}
 	}
-	
-	/*
-	public Configuration pluginPathResolver(URI SystemConfigLocation) 
-			throws ParserConfigurationException{
-		XMLService xmlS = XMLService.getInstance();
-		Configuration SystemSetting = xmlS.parseXML(SystemConfigLocation);
-		ArrayList<String> plugInJarlocations = 
-				tranverseNodes(SystemSetting,"PluginDirectory");
-		return null;
-	}
-	*/
 	
 	/**
 	 * The <code>String Name </code> passed to this method should be <b>name of 
@@ -70,44 +72,70 @@ public class JarClassLoader {
 	 * @return
 	 * @throws Exception
 	 */
-	public Class<?> loadClass(String jarLocation, String Name) throws Exception{
-	//public Class<?> loadClass(String Name) throws Exception{
+	public Class<?> loadClass(String Name) throws Exception{
 		Class<?> clazz = null;
+		Path Location = classLocationFetcher(Name);
+		if(Location == null){
+			throw new Exception("No such class");
+		}
+		String jarLocation = Location.toString(); 
 		XMLService xmlSevice = XMLService.getInstance();
-		//URL location = new URL("jar:file:" + "D:\\Test\\SayHello.jar"+"!/" + "config.xml");
 		URL location = new URL("jar:file:" + jarLocation +"!/" + "config.xml");
 		InputStream is = location.openStream();
-		Configuration cg = xmlSevice.parseXML(is);
-		//String className = "." + cg.getChild(Name).getText();
-		String className = cg.getChild(Name).getText();
+		Configuration cg = xmlSevice.parseXML(is).getChild("Handlers$1");
+		String className = cg.getChild(Name + "$1").getText();
 		if(className == null){
-			throw new Exception("No classpath location found");
+			throw new Exception("No such class");
 		}
 		URL[] urls = { new URL("jar:file:" + jarLocation+"!/") };
-		//URL[] urls = { new URL("jar:file:" + "D:\\Test\\SayHello.jar"+"!/") };
 		URLClassLoader cl = URLClassLoader.newInstance(urls);
 		clazz = cl.loadClass(className);
 		is.close();
 		return clazz;
 	}
 	
-	public Path classLocationFetcher(){
+	public Path classLocationFetcher(String className) 
+			throws MalformedURLException, IOException{
+		Path location = Paths.get("");
+		XMLService xml = XMLService.getInstance();
+		InputStream in = handlerinfoxmlLocation.toURL().openStream();
+		Configuration pluginfo = xml.parseXML(in);
+		Enumeration<Configuration> directories = pluginfo.getAllChildren();
+		while(directories != null && directories.hasMoreElements()){
+			Configuration directory = directories.nextElement();
+			Path get = directoryScanner(location, directory, className);
+			if(get != null){
+				return get;
+			}
+		}
 		return null;
 	}
 	
-	/*
-	public void savePreference(){
-		File f = new File(this.preferenceXML);
-		try {
-			FileOutputStream fout = new FileOutputStream(f);
-			classRank.store(fout, f.getName());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public Path directoryScanner(Path parentPath, 
+			Configuration node, String className){
+		Path currentPath = parentPath.resolve(node.getAttributeValue("path"));
+		Enumeration<Configuration> pluginsOrDirectories = 
+				node.getAllChildren();
+		while(pluginsOrDirectories != null && pluginsOrDirectories.hasMoreElements()){
+			Configuration child = pluginsOrDirectories.nextElement();
+			String nodeName = child.getName();
+			if(nodeName.indexOf("$") != -1){
+				nodeName = nodeName.substring(0, nodeName.indexOf("$"));
+			}
+			if(nodeName.equals("plugin")){
+				Enumeration<Configuration> classes = child.getAllChildren();
+				while(classes != null && classes.hasMoreElements()){
+					Configuration clazz = classes.nextElement();
+					if(clazz.getText().equals(className) && !clazz.getName().startsWith("view")){ 
+						return currentPath.resolve(child.getAttributeValue("jarName"));
+					}
+				}
+			}else if(nodeName.endsWith("directory")){
+				directoryScanner(currentPath, child, className);
+			}
 		}
-		
+		return null;
 	}
-	*/
 	
 	/**
 	 * Used to find the .class file in a .jar file.
@@ -136,7 +164,6 @@ public class JarClassLoader {
 					results.add(sc.getText());
 				}
 			}
-			//System.out.print(sc.hasText()?"text of <"+ sc.getName()+">: "+sc.getText()+"\n" : "");
 			Enumeration<Configuration> children = sc.getAllChildren();
 			Configuration child = null;
 			while(children.hasMoreElements()){
@@ -150,15 +177,19 @@ public class JarClassLoader {
 	/**
 	 * Scan the directories where plug in jar files are in
 	 * update the plugin.info.xml file as checking.
+	 *  <hr>
+	 * Implementing notes:<br>
+	 * 
+	 * <br>
 	 * @param locationofJars
 	 * @throws IOException 
 	 * @throws MalformedURLException 
 	 */
-	public void scanPlugins(boolean openAllJars) throws MalformedURLException, IOException{
+	public void scanPlugins(boolean openAllJars) 
+			throws MalformedURLException, IOException{
 		//load plugin.info.xml
 		XMLService xml = XMLService.getInstance();
-		//Configuration pluginfo = xml.parseXML(pluginfoxmlLocation);
-		InputStream in = pluginfoxmlLocation.toURL().openStream();
+		InputStream in = handlerinfoxmlLocation.toURL().openStream();
 		Configuration pluginfo = xml.parseXML(in);
 		Enumeration<Configuration> children = pluginfo.getAllChildren();
 		while(children != null && children.hasMoreElements()){
@@ -167,7 +198,7 @@ public class JarClassLoader {
 				scanHelper(child, null, openAllJars);
 			}
 		}
-		xml.createXML(pluginfoxmlLocation, pluginfo, "");
+		xml.createXML(handlerinfoxmlLocation, pluginfo, "");
 		in.close();
 	}
 	
@@ -180,13 +211,13 @@ public class JarClassLoader {
 	 * <br>
 	 * @param node: the <b>directory</b> will be scanned
 	 */
-	public void scanHelper(Configuration node, Path parentLocation, boolean openAllJars){	
+	public void scanHelper(Configuration node, Path parentLocation, 
+			boolean openAllJars){	
 		String location = node.getAttributeValue("path");
 		Path directoryLocation = null;
 		if(parentLocation == null){
 			directoryLocation = Paths.get(location);
 		}else{
-			//directoryLocation = parentLocation.resolve(location);
 			directoryLocation = Paths.get(parentLocation + location);
 		}
 		Hashtable<String, String> tempforPNodes = new Hashtable<String, String>();
@@ -201,8 +232,6 @@ public class JarClassLoader {
 				scanHelper(next,directoryLocation, openAllJars);
 				continue;
 			}
-			//System.out.println("Class loader" + next.getAttributeValue("jarName"));
-			System.out.println(next.getName());
 			tempforPNodes.put(next.getAttributeValue("jarName"), next.getName());
 		}
 		File[] files = directoryLocation.toFile().listFiles();
@@ -213,7 +242,8 @@ public class JarClassLoader {
 				String pluginName = tempforPNodes.remove(f.getName());
 				if(openAllJars){
 					try {
-						scanJar(node.getChild(pluginName),directoryLocation.resolve(f.getName()));
+						scanJar(node.getChild(pluginName),
+								directoryLocation.resolve(f.getName()));
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -236,9 +266,8 @@ public class JarClassLoader {
 					e.printStackTrace();
 				}
 			}
-			//remove the useless nodes in this Configuration
-			
 		}
+		//remove the useless nodes in this Configuration
 		Enumeration<String> allKeys = tempforPNodes.keys();
 		while(allKeys.hasMoreElements()){
 			String tagName = tempforPNodes.get(allKeys.nextElement());
@@ -246,36 +275,43 @@ public class JarClassLoader {
 		}
 	}
 	
-	public void scanJar(Configuration pluginNode, Path jarLocation) throws IOException{
+	public void scanJar(Configuration pluginNode, Path jarLocation) 
+			throws IOException{
 		XMLService xmlSevice = XMLService.getInstance();	
-		URL location = new URL("jar:file:" + jarLocation.toString() +"!/" + "config.xml");
+		URL location = 
+				new URL("jar:file:" + jarLocation.toString() +"!/" + "config.xml");
 		InputStream is = location.openStream();
 		Configuration Paths = xmlSevice.parseXML(is);
+		Configuration handlers = Paths.getChild("Handlers$1");
+		Configuration views = Paths.getChild("Views$1");
 		//tempforClasses: The class information in the plugin.info.xml
-		Hashtable <String, Configuration> tempforClasses = new Hashtable <String, Configuration>();
+		Hashtable <String, Configuration> tempforClasses = 
+				new Hashtable <String, Configuration>();
 		//copy all class information already in pluginNode to the hash table. 
 		//The key is the class name named by the customer, element is the tag name
 		//recognized by complier
-		System.out.println("First loop in scanJar starts");
+		//System.out.println("First loop in scanJar starts");
 		Enumeration<Configuration> classes = pluginNode.getAllChildren();
 		while (classes != null && classes.hasMoreElements()){
 			Configuration clazz = classes.nextElement();
-			//clazz.getText() gets the class name;
-			//clazz.getName() gets the class name;
-			tempforClasses.put(clazz.getAttributeValue("classpath"),clazz);
+			tempforClasses.put(clazz.getAttributeValue(
+					clazz.hasAttribute("classpath")? "classpath":"location"),clazz);
 		}
 		//All the information of class paths in the file config.xml
-		Enumeration<Configuration> classPaths = Paths.getAllChildren();
+		Enumeration<Configuration> classInfos = handlers.getAllChildren();
+		Enumeration<Configuration> viewInfos = views.getAllChildren();
 		//Traverse the config.xml file in jar
-		while(classPaths != null && classPaths.hasMoreElements()){
-			Configuration clazz = classPaths.nextElement(); // the class information in config.xml
+		while(classInfos != null && classInfos.hasMoreElements()){
+			// the class information in config.xml
+			Configuration clazz = classInfos.nextElement(); 
 			//check whether this class information has already in the plugin.info.xml
 			//clazz.getName() gets the class name; clazz.getText() gets the class path
 			Configuration classRecorded = tempforClasses.get(clazz.getText());
-			if(classRecorded != null && classRecorded.getText().equals(clazz.getName())){
+			if(classRecorded != null && 
+					classRecorded.getText().equals(clazz.getName())){
 				//matched
 				tempforClasses.remove(clazz.getText());
-			}else {
+			}else if(classRecorded == null || classRecorded.getName().startsWith("class")){
 				//doesn't match
 				Configuration toAdd = new Configuration();
 				int j = 1;
@@ -287,6 +323,32 @@ public class JarClassLoader {
 					toAdd.addAttribute("classpath", clazz.getText());
 				}
 				toAdd.setText(clazz.getName());
+				pluginNode.addChild(toAdd);
+			}
+		}
+		while(viewInfos != null && viewInfos.hasMoreElements()){
+			// the class information in config.xml
+			Configuration view = viewInfos.nextElement(); 
+			//check whether this class information has already in the plugin.info.xml
+			//clazz.getName() gets the class name; clazz.getText() gets the class path
+			Configuration viewRecorded = tempforClasses.get(view.getText());
+			if(viewRecorded != null && 
+					viewRecorded.getText().equals(view.getName())){
+				//matched
+				tempforClasses.remove(view.getText());
+			}else if(viewRecorded == null || viewRecorded.getName().startsWith("view")){
+				//doesn't match
+				Configuration toAdd = new Configuration();
+				int j = 1;
+				while(pluginNode.getChild("view" + "$" + j) != null){
+					j++;
+				}
+				toAdd.setName("view" + "$" + j);
+				if(view.hasText()){
+					toAdd.addAttribute("location", view.getText());
+					toAdd.addAttribute("controller", view.getAttributeValue("controller"));
+				}
+				toAdd.setText(view.getName());
 				pluginNode.addChild(toAdd);
 			}
 		}

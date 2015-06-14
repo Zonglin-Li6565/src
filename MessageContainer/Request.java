@@ -4,6 +4,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 /**
+ * The massage that the <code>ViewManager</code> sends to the <code>Handler</code>
  * The instance of this type will contain two hash table:
  * <br>
  * <li>tableofCommand: The command the View gives hander.
@@ -23,6 +24,35 @@ public class Request<E, K> {
 	private Hashtable<E, Object> tableofCommand;
 	private String handlerName;
 	private Hashtable<K, Object> tableofResourceObjects;
+	/**
+	 * <b>important<br></b>The Hash Code for the ViewController sends out the request
+	 * Important for determining the domain of application of update.<br>
+	 * <b>DO NOT CHANGE IT!</b>
+	 */
+	private int hashCode;
+	
+	/**
+	 * Get the hashCode of the ViewController that sends out the Request. <br>
+	 * <b>You have to provide this code when passing <code>Update</code> to the Mapper.</b>
+	 * <br>This will be used to determine the domain of Update. If not provided, or 
+	 * provided with not supported domain choice
+	 * the default domain-MASTERVIEW will be considered. 
+	 * @return the hashCode
+	 */
+	public int getHashCode() {
+		return hashCode;
+	}
+
+	/**
+	 * Set the hashCode of the ViewController.
+	 * <b>Only the Mapper can call it.</b>
+	 * @param hashCode the hashCode to set
+	 */
+	public void setHashCode(int hashCode) {
+		this.hashCode = hashCode;
+	}
+
+	
 	
 	public Request(String nameofHandler){
 		handlerName = nameofHandler;

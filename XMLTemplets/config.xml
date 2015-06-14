@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configurations>
+	<Handlers>
+		<NameOfHandler>The class Path of the handler</NameOfHandler>
+	</Handlers>
+	<Views>
+		<NameOfView controller="controller class path">FXMLfileName</NameOfView>
+	</Views>
+</Configurations>
+
+<--? The NameOfHandler is the name YOU GIVE to the handler class, could not be the actuall class name of the handler/>
+<--? The NameOfView is the name YOU GIVE to the combination of controller class and fxml document. The NameOfView could be neither the class name of the controller, nor the file name of the fxml document/>

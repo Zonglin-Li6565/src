@@ -58,6 +58,10 @@ public class Configuration {
 		return this.attributes.get(name);
 	}
 	
+	public boolean hasAttribute(String name){
+		return !(this.attributes.get(name) == null);
+	}
+	
 	public Enumeration<String> getAllAttributes(){
 		if(this.attributes == null){
 			return null;

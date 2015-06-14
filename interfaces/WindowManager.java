@@ -2,6 +2,8 @@ package interfaces;
 
 import java.io.IOException;
 
+import javafx.stage.StageStyle;
+
 /**
  * <hr>
  * Implementing notes:<br>
@@ -12,54 +14,23 @@ import java.io.IOException;
  */
 public interface WindowManager {
 	
-	/**
-	 * Same center as the previous scene
-	 * @param FXlocation
-	 * @return
-	 * @throws Exception 
-	 */
-	abstract ViewController replaceSceneContent(String FXlocation, boolean resizeAble) throws Exception;
+	abstract ViewController replaceSceneContent(String stageName, boolean resizeAble) throws Exception;
+	
+	abstract ViewController replaceSceneContent(String stageName, boolean resizeAble, String title) 
+			throws Exception;
 
-	/**
-	 * At the indicated location
-	 * @param FXlocation
-	 * @param x
-	 * @param y
-	 * @param width
-	 * @param hight
-	 * @return
-	 * @throws Exception 
-	 */
-	abstract ViewController replaceSceneContent(String FXlocation, int x, int y, 
-			boolean resizeAble) throws Exception;
+	abstract ViewController replaceSceneContent(String stageName, int x, int y, 
+			boolean resizeAble, String title) throws Exception;
 	
-	/**
-	 * Default window location. Default fxml file location.
-	 * @param title
-	 * @return
-	 */
-	abstract ViewController showStartWindow(String title, boolean resizeable);
+	abstract ViewController showNewStage(String viewName, String title, 
+			boolean resizeAble, StageStyle stageStyle) throws IOException, Exception;
 	
-	/**
-	 * Default window location. Specified fxml file location.
-	 * @param location
-	 * @param title
-	 * @return
-	 */
-	abstract ViewController showStartWindow(String location, String title, 
-			boolean resizeable);
-	
-	/**
-	 * 
-	 * @param FXlocation
-	 * @return
-	 */
-	abstract ViewController showNewStage(String FXlocation, String title, 
-			boolean resizeAble) throws IOException;
-	
-	/**
-	 * 
-	 * @param viewName
-	 */
+	abstract ViewController showNewStage(String viewName, String title, 
+			boolean resizeAble, StageStyle stageStyle, int x,
+			int y) throws IOException, Exception;
+
 	abstract void shutdownStage(String viewName);
+	
+	abstract void changingSettingofStage(String stageName, 
+			boolean resizAble, String title, int x, int y);
 }

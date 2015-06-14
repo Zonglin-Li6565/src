@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<directories>
+	<directory path="The directory your plugin files locate">
+	</directory>
+	<directory path="The directory your plugin files locate">
+		<directory path="the relative path of a nested directory. Start with / or \">
+		</directory>
+	</directory>
+</directories>

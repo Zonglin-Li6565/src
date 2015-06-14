@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SysConfig>
+    <frequencyfileLocation>The location of frequency file</frequencyfileLocation>
+    <StartWindow name="The name of the fxml file for the first stage" title="The title of the stage" resizable="true/false" 
+        StageStyle="StageStyleName" X="x location. Integer" Y="y location. Integer" />
+    <--StageStyle = "DECORATED / TRANSPARENT"
+    <IntervalforSavingFrequencyFile>Integer, in minutes</IntervalforSavingFrequencyFile>
+    <Locationofplugininfoxml>D:\Test\plugin.info.xml</Locationofplugininfoxml>
+</SysConfig>
